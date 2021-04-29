@@ -24,9 +24,16 @@ fn main() -> ! {
     let peripherals = Peripherals::take().unwrap();
     let mut pins = wio::Pins::new(peripherals.PORT);
 
-    // TODO: ボタン1を押している間、LEDが点灯するコードを書く
+    let mut led = pins.user_led.into_push_pull_output(&mut pins.port);
+    let button1 = pins.button1.into_floating_input(&mut pins.port);
 
-    loop {}
+    loop {
+        if button1.is_low().unwrap() {
+            led.set_high().unwrap();
+        } else {
+            led.set_low().unwrap();
+        }
+    }
 }
 
 // Wio Terminalのボタン1ドライバ

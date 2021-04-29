@@ -24,14 +24,14 @@ fn main() -> ! {
     let peripherals = Peripherals::take().unwrap();
     let mut pins = wio::Pins::new(peripherals.PORT);
 
-    let mut led = pins.user_led.into_push_pull_output(&mut pins.port);
+    let mut led = Led::new(pins.user_led, &mut pins.port);
     let button1 = Button1::new(pins.button1, &mut pins.port);
 
     loop {
         if button1.is_pressed() {
-            led.set_high().unwrap();
+            led.turn_on();
         } else {
-            led.set_low().unwrap();
+            led.turn_off();
         }
     }
 }
@@ -56,5 +56,26 @@ impl Button1 {
     }
 }
 
-// Wio TerminalのユーザーLEDドライバ
-// TODO: Led を実装する
+struct Led {
+    pin: Pa15<Output<PushPull>>,
+}
+
+impl Led {
+    fn new(pin: Pa15<Input<Floating>>, port: &mut Port) -> Led {
+        Led {
+            pin: pin.into_push_pull_output(port),
+        }
+    }
+
+    fn turn_on(&mut self) {
+        self.pin.set_high().unwrap();
+    }
+
+    fn turn_off(&mut self) {
+        self.pin.set_low().unwrap();
+    }
+
+    fn toggle(&mut self) {
+        self.pin.toggle();
+    }
+}

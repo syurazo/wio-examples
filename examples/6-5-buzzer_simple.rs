@@ -32,10 +32,12 @@ fn main() -> ! {
     );
     let mut delay = Delay::new(core.SYST, &mut clocks);
     let mut pins = Pins::new(peripherals.PORT);
-    // TODO: ブザーピンを出力に設定する
+    // ブザーピンを出力に設定する
+    let mut buzzer = pins.buzzer_ctr.into_push_pull_output(&mut pins.port);
 
-    // TODO: ブザーを鳴らす
+    // ブザーを鳴らす
     loop {
-
+        buzzer.toggle();
+        delay.delay_ms(1u8);
     }
 }

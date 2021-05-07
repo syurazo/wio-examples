@@ -49,7 +49,10 @@ fn main() -> ! {
         )
         .unwrap();
 
-    // TODO: スプラッシュ画面を描画する
+    // スプラッシュ画面を描画する
+    let raw = ImageRawLE::new(include_bytes!("./assets/ferris.raw"), 86, 64);
+    let splash = WioSplash::new(Rgb565::GREEN, raw);
+    splash.draw(&mut display).unwrap();
 
     loop {}
 }

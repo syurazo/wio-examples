@@ -186,17 +186,38 @@ fn main() -> ! {
     .unwrap();
 
     // ボタンのGPIOを初期化
-    let button_start =
-        sets.buttons.button3.into_floating_input(&mut sets.port);
-    let button_stop =
-        sets.buttons.button2.into_floating_input(&mut sets.port);
-    let button_clear =
-        sets.buttons.button1.into_floating_input(&mut sets.port);
+    let button_start = sets.buttons.button3.into_floating_input(&mut sets.port);
+    let button_stop = sets.buttons.button2.into_floating_input(&mut sets.port);
+    let button_clear = sets.buttons.button1.into_floating_input(&mut sets.port);
 
     let mut state = State::Initializing;
     loop {
         match state {
-            // TODO: ステートマシンを実装する
+            State::Initializing => {
+                draw(&mut display).unwrap();
+                state = State::Idle;
+            }
+            State::Idle => {
+                if button_start.is_low().unwrap() {
+                    unsafe { CTX.as_mut().unwrap().tc3.enable_interrupt() }
+                    beep(&mut buzzer, &mut delay, 880.hz(), 200u16);
+                    state = State::Running;
+                } else if button_clear.is_low().unwrap() {
+                    unsafe { CTX.as_mut().unwrap().timer_counter = 0 }
+                    beep(&mut buzzer, &mut delay, 1760.hz(), 200u16);
+                    draw(&mut display).unwrap();
+                }
+            }
+            State::Running => {
+                if button_stop.is_low().unwrap() {
+                    unsafe { CTX.as_mut().unwrap().tc3.disable_interrupt() }
+                    beep(&mut buzzer, &mut delay, 880.hz(), 50u16);
+                    delay.delay_ms(50u16);
+                    beep(&mut buzzer, &mut delay, 880.hz(), 100u16);
+                    state = State::Idle;
+                }
+                draw(&mut display).unwrap();
+            }
         }
     }
 }
@@ -205,7 +226,10 @@ fn main() -> ! {
 #[interrupt]
 fn TC3() {
     unsafe {
-        // TODO: タイマカウンタをインクリメントして次のタイマを再開する
+        // タイマカウンタをインクリメントして次のタイマを再開する
+        let ctx = CTX.as_mut().unwrap();
+        ctx.tc3.wait().ok();
+        ctx.timer_counter += 1;
     }
 }
 
